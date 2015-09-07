@@ -10,29 +10,41 @@
 #include "curl/curl.h"
 #include "jansson.h"
 #include <iostream>
+#include "mysql_connection.h"
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
 
 using namespace cv;
 using namespace std;
 
 vector<string> FrameDownSampling(string FolderAddress);
+void MysSQL_video_and_algorithm_table();
+
+
+const string sigBasePath = "D:/VideoSearch/Signatures";
+const string videosBasePath = "D:/VideoSearch/Test Data/mp4";
+const string framesBasePath = "D:/VideoSearch/Frames";
+const string es_index = "tolga";
+const string es_type	= "TestObject";
 
 int main(int argc, char* argv[])
 {
-	//Elasticsearch parameters initialization
-	string es_index = "tolga";
-	string es_type	= "TestObject";
+	//Elasticsearch parameters initialization	
 	string es_id	= "";
-	vector<string> frames = FrameDownSampling(argv[1]); //@param argv[1] is directory of frames' folder
-	pathControl((string)argv[2]);
+	string framesPath = framesBasePath + "/" + argv[1];
+	vector<string> scenes = FrameDownSampling(framesPath); //@param argv[1] is directory of frames' folder
+	//pathControl((string)argv[2]);
 	TVoctreeVLFeat VT;
 	VT.init_read("D:/Data/VT_Middle_Tree_100MSig2s_SIFT_HELL_ZSTD_SIFT.dat");
-
-	string video_id = "anni001";
-	for(int i = 0; i < frames.size(); i++)
+	
+	for(int i = 0; i < scenes.size(); i++)
 	{
-		string fileName = argv[1]; 
-		fileName = fileName + "\\" + frames[i];
-		es_id = video_id + "_" + frames[i].substr(0,frames[i].length()-4);
+		string fileName = framesBasePath + "/" + argv[1] + "/" + scenes[i];
+		string sigPath = sigBasePath + "/" + argv[1] + "/" + scenes[i] + ".sig";
+		//es_id = argv[1] + "_" + scenes[i].substr(0,scenes[i].length()-4);
 		//////////////////////////////////////////////////////////////////////////
 		// SIFT Feature Extraction
 		Mat im = imread(fileName, IMREAD_GRAYSCALE);
@@ -43,35 +55,29 @@ int main(int argc, char* argv[])
 		unsigned char * MySiftu;
 		mySig = t_feat_extract(IM, im.cols, im.rows, im.cols, 1, 2000, T_FEAT_EZ_SIFT,T_FEAT_DIST_HELL,T_FEAT_CMPRS_NONE);
 		MySiftu = new unsigned char[mySig.numKeypts*128];
-		memcpy(MySiftu, mySig.keyPoints, (mySig.numKeypts)*128*sizeof(unsigned char));				
+		memcpy(MySiftu, mySig.keyPoints, (mySig.numKeypts)*128*sizeof(unsigned char));		
 		//////////////////////////////////////////////////////////////////////////
 		// BoW QUANTIZATION
 		unsigned int *vwi = new unsigned int[mySig.numKeypts]();
 		VT.quantize_multi(vwi,MySiftu,mySig.numKeypts);
-		
+		//
+		string words_str = "";
+		for (unsigned int ii = 0; ii < mySig.numKeypts; ii++)
+			words_str += " " + int2string(vwi[ii]);
 		//////////////////////////////////////////////////////////////////////////
 		//JSON			
-		json_error_t error;
+		//json_error_t error;
 		json_t *root = json_object();
 		json_t *array = json_array();		
 		json_t *source = json_object();
 
-		for(int i = 0; i<mySig.numKeypts; i++)
-		{
-			json_array_append_new(array, json_integer(vwi[i]));
-		}
-		json_object_set_new(source, "videoID", json_string(video_id.c_str()));
-		json_object_set_new(source, "frameID", json_string(frames[i].substr(0,frames[i].length()-4).c_str()));
+		for(unsigned int ii = 0; ii<mySig.numKeypts; ii++)
+			json_array_append_new(array, json_integer(vwi[ii]));
+		
+		json_object_set_new(source, "videoID", json_string(argv[1]));
+		json_object_set_new(source, "frameID", json_string(scenes[i].substr(0,scenes[i].length()-4).c_str()));
 		json_object_set_new(source, "word", array);
-
-		/*json_object_set_new(root, "_index", json_string(es_index.c_str()));
-		json_object_set_new(root, "_type", json_string(es_type.c_str()));
-		json_object_set_new(root, "_id", json_string(es_id.c_str()));
-		json_object_set_new(root, "_source", source);*/
-
-		//json_object_set_new(root, "videoID", json_string(video_id.c_str()));
-		//json_object_set_new(root, "frameID", json_string(frames[i].substr(0,frames[i].length()-4).c_str()));
-		//json_object_set_new(root, "word", array);
+		json_object_set_new(source, "words_string", json_string(words_str.c_str()));
 
 		if(!json_is_object(root))
 		{
@@ -79,12 +85,11 @@ int main(int argc, char* argv[])
 			return 1;
 		}
 		//////////////////////////////////////////////////////////////////////////
-		// ELASTIC SEARCH
-	
+		// ELASTIC SEARCH	
 		CURL *curl = curl_easy_init();
 		char *userPWD = "writer:writeme";
-		string url = argv[3];
-		url = url + "/" + es_index + "/" + es_type + "/" + es_id;
+		string url = argv[2];
+		url = url + "/" + es_index + "/" + es_type ;
 		struct curl_slist *headers = NULL; 
 		size_t json_flags = 0;
 		/* set content type */
@@ -95,7 +100,7 @@ int main(int argc, char* argv[])
 			curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 			curl_easy_setopt(curl, CURLOPT_USERPWD, userPWD);
 			/* set curl options */
-			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
+			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
 			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);		
 			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_dumps(source,json_flags));
 			res = curl_easy_perform(curl);
@@ -105,14 +110,69 @@ int main(int argc, char* argv[])
 			curl_slist_free_all(headers);
 		}
 		//////////////////////////////////////////////////////////////////////////
+		// MySQL//bitnami : 181420b969
+		cout << endl;
+		cout << "Let's have MySQL count from 10 to 1..." << endl;
+		try {
+			sql::Driver *driver;
+			sql::Connection *con;
+			//sql::Statement *stmt;
+			sql::ResultSet *res;
+			sql::PreparedStatement *pstmt;
+			/* Create a connection */
+			driver = get_driver_instance();
+			con = driver->connect("tcp://127.0.0.1:3306", "bitnami", "181420b969");
+			/* Connect to the MySQL test database */
+			con->setSchema("videosearch");
+			/*stmt = con->createStatement();
+			stmt->execute("DROP TABLE IF EXISTS test");
+			stmt->execute("CREATE TABLE test(id INT)");
+			delete stmt;*/
+			// TABLE:		video_frame
+			pstmt = con->prepareStatement("INSERT INTO video_frame(video_id, frame_id, algorithm_id, algorithm_name, tree_name, SIFT_type, feature_count, video_disk_path, frame_disk_path, signature_disk_path, words_string) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			pstmt->setInt(1, 1);
+			pstmt->setInt(2, i);
+			pstmt->setInt(3, 1);
+			pstmt->setString(4,"Run2");
+			pstmt->setString(5,"Small_Tree");
+			pstmt->setString(6,"Ez_SIFT");
+			pstmt->setInt(7, mySig.numKeypts);
+			pstmt->setString(8,argv[2]);
+			pstmt->setString(9,fileName.c_str());
+			pstmt->setString(10,sigPath.c_str());
+			pstmt->setString(11, words_str.c_str());
+			pstmt->executeUpdate();
+			delete pstmt;
+			/* Select in ascending order */
+			pstmt = con->prepareStatement("SELECT id FROM video_meta ORDER BY id ASC");
+			res = pstmt->executeQuery();
+			/* Fetch in reverse = descending order! */
+			res->afterLast();
+			while (res->previous())
+				cout << "\t... MySQL counts: " << res->getInt("id") << endl;
+			delete res;
+			delete pstmt;
+			delete con;
+			//////////////////////////////////////////////////////////////////////////
+		} catch (sql::SQLException &e) {
+			cout << "# ERR: SQLException in " << __FILE__;
+			cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
+			cout << "# ERR: " << e.what();
+			cout << " (MySQL error code: " << e.getErrorCode();
+			cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+		}
+		//////////////////////////////////////////////////////////////////////////
 		// releases		
 		t_feat_release_signature(&mySig);
 		delete[] MySiftu;
 		//delete[] IM;
 		im.release();
 		json_decref(root);
-		//////////////////////////////////////////////////////////////////////////
+		//delete words_str;
 	}
+	//////////////////////////////////////////////////////////////////////////
+	// releases
+	scenes.clear();
 	VT.clean();
 	return 0;
 }
@@ -128,7 +188,7 @@ vector<string> FrameDownSampling(string FolderAddress)
 	}
 	sort(fileListNumeric.begin(),fileListNumeric.end());
 	vector<MatND> HSV_Hists;
-	int base_frame_number = 0, limit = fileList.size(), querry = 0;
+	unsigned int base_frame_number = 0, limit = fileList.size(), querry = 0;
 	//vector<Mat> inputImgVectors, outputImgVectors;		// remove inputImgVector after development done!!!
 	
 	MatND prevBaseHistogram;
@@ -189,4 +249,79 @@ vector<string> FrameDownSampling(string FolderAddress)
 	printf("\nTotal Reduced Frame Number: %5d%", outputFileNameList.size());
 	printf("\nFrame DownSampling is Done");
 	return outputFileNameList;
+}
+
+void MysSQL_video_and_algorithm_table()
+{
+		// MySQL//bitnami : 181420b969
+		cout << endl;
+		cout << "Let's have MySQL count from 10 to 1..." << endl;
+		try {
+			sql::Driver *driver;
+			sql::Connection *con;
+			//sql::Statement *stmt;
+			sql::ResultSet *res;
+			sql::PreparedStatement *pstmt;
+			/* Create a connection */
+			driver = get_driver_instance();
+			con = driver->connect("tcp://127.0.0.1:3306", "bitnami", "181420b969");
+			/* Connect to the MySQL test database */
+			con->setSchema("videosearch");
+			/*stmt = con->createStatement();
+			stmt->execute("DROP TABLE IF EXISTS test");
+			stmt->execute("CREATE TABLE test(id INT)");
+			delete stmt;*/
+			/* '?' is the supported placeholder syntax */
+			  //TABLE:		algorithm
+			pstmt = con->prepareStatement("INSERT INTO algorithm(id,algorithm_name,tree_name, SIFT_type) VALUES (?, ?, ?, ?)");
+			pstmt->setInt(1, 2);
+			pstmt->setString(2,"Run2");
+			pstmt->setString(3,"Small_Tree");
+			pstmt->setString(4,"Ez_SIFT");
+			pstmt->executeUpdate();
+			delete pstmt;
+			/* Select in ascending order */
+			pstmt = con->prepareStatement("SELECT id FROM algorithm ORDER BY id ASC");
+			res = pstmt->executeQuery();
+			/* Fetch in reverse = descending order! */
+			res->afterLast();
+			while (res->previous())
+				cout << "\t... MySQL counts: " << res->getInt("id") << endl;
+			delete res;
+			delete pstmt;
+			////////////////////////////////////////////////////////////////////////
+			// TABLE:			video_meta
+			pstmt = con->prepareStatement("INSERT INTO video_meta(id, source_type, source_url, source_encoding, source_fps, source_height, source_width, duration, n_frames, n_scenes, video_disk_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			pstmt->setInt(1, 1);
+			pstmt->setString(2,"anni001");
+			pstmt->setString(3,"https://trecvid.com");
+			pstmt->setString(4,".mpg");
+			pstmt->setDouble(5,14.5);
+			pstmt->setInt(6,640);
+			pstmt->setInt(7,480);
+			pstmt->setInt(8,500);
+			pstmt->setInt(9,136);
+			pstmt->setInt(10,51);
+			pstmt->setString(11,"D:\VideoSearch\Test Data\mp4\TRECVID\anni001.mpg");
+			pstmt->executeUpdate();
+			delete pstmt;
+			/* Select in ascending order */
+			pstmt = con->prepareStatement("SELECT id FROM video_meta ORDER BY id ASC");
+			res = pstmt->executeQuery();
+			/* Fetch in reverse = descending order! */
+			res->afterLast();
+			while (res->previous())
+				cout << "\t... MySQL counts: " << res->getInt("id") << endl;
+			delete res;
+			delete pstmt;
+			cout << "\t... MySQL counts: " << res->getInt("id") << endl;
+			delete con;
+			//////////////////////////////////////////////////////////////////////////
+		} catch (sql::SQLException &e) {
+			cout << "# ERR: SQLException in " << __FILE__;
+			cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
+			cout << "# ERR: " << e.what();
+			cout << " (MySQL error code: " << e.getErrorCode();
+			cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+		}
 }

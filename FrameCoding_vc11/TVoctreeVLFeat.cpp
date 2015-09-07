@@ -462,18 +462,15 @@ VlHIKMNode *TVoctreeVLFeat::create_tree_node(FILE* f)
 int TVoctreeVLFeat::read_hikm(const char* FileName)
 {
 	FILE* f = fopen(FileName, "rb");
-
 	if (!f)
 	{
 		fprintf(stderr, "Cannot open file %s\n", FileName);
 		return 0;
 	}
-
 	vl_size magic = 0;
 	long long temp = 0;
 	long long tempi= 0;
 	fread(&magic, sizeof(vl_size), 1, f);
-
 	if (magic!=VL_FEAT_HIKM_TREE_MAGIC)
 	{
 		fprintf(stderr, "The file is not a valid HIKM tree\n");
