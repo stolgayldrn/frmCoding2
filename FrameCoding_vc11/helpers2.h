@@ -7,6 +7,8 @@
 #include <time.h>
 #include <math.h>
 #include <sstream>
+#include <iostream>
+#include <fstream>
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 #include <Windows.h>
@@ -17,6 +19,10 @@
 #include "dirent.h"
 //#include <opencv2\core.hpp>
 //#include "t_common_defs.h"
+#define __TY_VIDEO_SEARCH___FPS_PROCESS 4
+#define __TY_VIDEO_SEARCH___FRAME_WIDTH 960
+#define __TY_VIDEO_SEARCH___FRAME_HEIGHT 720
+
 
 using namespace std;
 
@@ -37,6 +43,8 @@ string int2string(int num);
 cv::Mat makeCanvas(std::vector<cv::Mat>& vecMat, int windowHeight, int nRows);
 int dirExists(const char *path);
 void pathControl(string Path);
+void fileCopy(string sourePath, string destPath);
+std::size_t callback( const char* in, std::size_t size, std::size_t num, std::string* out);
 // json
 //int decode_query_json(const char* Query, char* filePath, char* id, int* NumMatches);
 //int decode_query_json(const char* Query, TRunOptions* runOptions);
@@ -45,7 +53,7 @@ void pathControl(string Path);
 //char* get_json_empty(const char* id, const char* name);
 //char* get_sorted_result_json(const int numMaxMatches, const char* id, const char* name, int* labels, float* scores);
 //char* get_run_result_json(TRunOptions &runResult);
-//
+
 //// socket
 //void connect_socket(const char* ip, void** context, void** requester);
 //void send_socket(void* requester, const char* text);

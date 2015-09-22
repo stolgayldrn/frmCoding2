@@ -3,6 +3,7 @@
 #include "helpers2.h"
 
 using namespace cv;
+using namespace std;
 //#include "cmp.h"
 
 //typedef enum TImageOpMode {T_MODE_SEARCH = 0, T_MODE_INSERT = 1, T_MODE_REMOVE = 2};
@@ -80,20 +81,19 @@ int file_exist (const char *filename)
   struct stat   buffer;   
   return (stat (filename, &buffer) == 0);
 }
-/*
 
-static bool file_reader(cmp_ctx_t *ctx, void *data, size_t limit) 
-{
-    memcpy(data, limit, (FILE *)ctx->buf);
-}
-
-static size_t file_writer(cmp_ctx_t *ctx, const void *data, size_t count) 
-{
-    return fwrite(data, sizeof(uint8_t), count, (FILE *)ctx->buf);
-}
-*/
+//
+//static bool file_reader(cmp_ctx_t *ctx, void *data, size_t limit){
+//memcpy(data, limit, (FILE *)ctx->buf);
+//}
+//
+//static size_t file_writer(cmp_ctx_t *ctx, const void *data, size_t count) 
+//{
+//return fwrite(data, sizeof(uint8_t), count, (FILE *)ctx->buf);
+//}
 
 
+//
 //int decode_query_json(const char* query, trunoptions* runoptions)
 //{
 //    json_error_t error;
@@ -177,7 +177,7 @@ static size_t file_writer(cmp_ctx_t *ctx, const void *data, size_t count)
 //	return numpropertyset;
 //}
 //
-//
+
 //int decode_result_query_json(const char* Query, TRunOptions* runOptions)
 //{
 //    json_error_t error;
@@ -332,7 +332,7 @@ static size_t file_writer(cmp_ctx_t *ctx, const void *data, size_t count)
 //
 //	return result;
 //}
-//
+
 //char* get_run_result_json(TRunOptions& runResult)
 //{
 //	json_t *jobj = json_object(), *jmatches = json_array();
@@ -400,13 +400,13 @@ static size_t file_writer(cmp_ctx_t *ctx, const void *data, size_t count)
 //
 //	return result;
 //}
+
 //
-///*
 //char* get_result_json_list(const int numMaxMatches, const char* id, const char* name, int* labels, float* scores, vector<string> frameMap)
 //{
 //
-//}*/
-//
+//}
+
 //// "tcp://192.168.1.102:5555"
 //void connect_socket(const char* ip, void** context, void** requester)
 //{
@@ -727,8 +727,33 @@ void pathControl(string Path)
 	} 
 }
 
+void fileCopy(string sourePath, string destPath)
+{
+	ifstream source(sourePath, ios::binary);
+	ofstream dest(destPath, ios::binary);
 
+	istreambuf_iterator<char> begin_source(source);
+	istreambuf_iterator<char> end_source;
+	ostreambuf_iterator<char> begin_dest(dest); 
+	copy(begin_source, end_source, begin_dest);
 
+	source.close();
+	dest.close();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// JSON
+std::size_t callback(
+	const char* in,
+	std::size_t size,
+	std::size_t num,
+	std::string* out)
+{
+	const std::size_t totalBytes(size * num);
+	out->append(in, totalBytes);
+	return totalBytes;
+}
+//////////////////////////////////////////////////////////////////////////
 //int cv_get_descs(const char* FileName, cv::Mat &descriptorMat, std::vector<cv::Point2f> &Coords, std::vector<float> &Orientations, std::vector<float> &Scales)
 //{
 //	int status = -1;
