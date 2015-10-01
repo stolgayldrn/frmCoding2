@@ -42,7 +42,7 @@ int read_sig(const char* FileName, unsigned int *numdesc, unsigned char** siftDe
 string int2string(int num);
 cv::Mat makeCanvas(std::vector<cv::Mat>& vecMat, int windowHeight, int nRows);
 int dirExists(const char *path);
-void pathControl(string Path);
+int pathControl(string Path);
 void fileCopy(string sourePath, string destPath);
 std::size_t callback( const char* in, std::size_t size, std::size_t num, std::string* out);
 // json

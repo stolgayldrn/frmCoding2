@@ -17,6 +17,7 @@
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
 #include <ctime>
+#include "frame.h"
 
 using namespace cv;
 using namespace std;
@@ -63,6 +64,50 @@ TVoctreeVLFeat VT;
 /*		edit "fileName", "video_id", "AA_ID" than execute	            */
 /************************************************************************/
 int main(int argc, char* argv[])
+{
+	Path *myPath = new Path;
+	ES_params *myES = new ES_params;
+	Video_info *myVideo_info = new Video_info;
+	MYSQL_params *myMYSQL = new MYSQL_params;
+	Algorithm_info *myAlg = new Algorithm_info;
+
+	myPath->frameBase			= "D:/VideoSearch/Frames";
+	myPath->sceneBase			= "D:/VideoSearch/Scenes";
+	myPath->signatureBase		= "D:/VideoSearch/Signatures";
+	myPath->videoBase			= "D:/VideoSearch/TestData/mp4";
+	myPath->videoBulten			= "D:/VideoSearch/TestData/ShowTVBulten";
+	myPath->VT_data				= "D:/VideoSearch/VT/VT_Middle_Tree_100MSig2s_SIFT_HELL_ZSTD_SIFT.dat";
+
+	myES->index					= "video_search";
+	myES->type					= "frames2";
+	myES->url					= "http://services.maviucak.com:9200";;
+	myES->userPWD				= "";
+
+	myVideo_info->algorithm_id	= 1;
+	myVideo_info->id			= 0;
+	myVideo_info->url			= "http://www.anadoluimages.com";
+	myVideo_info->fileName		= "";
+	
+
+	
+	myMYSQL->hostName			= "tcp://127.0.0.1:3306";
+	myMYSQL->userName			= "bitnami";
+	myMYSQL->password			= "181420b969";
+	myMYSQL->catalog			= "videosearch";
+	myMYSQL->table_frame		= "video_frame";
+	myMYSQL->table_video		= "video_meta";
+
+	myAlg->feature_type			= "EZ_SIFT";
+	myAlg->id					= 1;
+	myAlg->name					= "Run1";
+	myAlg->tree_name			= "VT_Middle_Tree_100MSig2s_SIFT_HELL_ZSTD_SIFT";
+
+	cout<<"max word size: " << 6;
+
+	return 0;
+}
+
+int main2(int argc, char* argv[])
 {
 	video_coding_initialization();	
 	/*vector<string> v_id,v_url;

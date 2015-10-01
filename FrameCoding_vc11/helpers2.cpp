@@ -650,6 +650,7 @@ std::string int2string(int num)
 	return str;
 }
 
+
 Mat makeCanvas(std::vector<Mat>& vecMat, int windowHeight, int nRows) {
 	int N = vecMat.size();
 	nRows  = nRows > N ? N : nRows; 
@@ -711,20 +712,26 @@ int dirExists(const char *path)
 	}
 	return false;
 }
-void pathControl(string Path)
+int pathControl(string Path)
 {
 	if(!dirExists(Path.c_str()))
 	{
 		wstring stemp = wstring(Path.begin(), Path.end());
 		LPCWSTR szDirPath = stemp.c_str();
-
 		// Create a new directory.
 		if(!CreateDirectoryW(szDirPath, NULL))
-			printf("\nCouldn't create %S directory.\n", szDirPath);
+		{
+			printf("\nDirectory error: Couldn't create %S directory.\n", szDirPath);
+			return 0;
+		}
 		else
+		{
 			printf("\n%S directory successfully created.\n", szDirPath);
-
-	} 
+			return 1;		
+		}
+	}
+	else
+		return 1;
 }
 
 void fileCopy(string sourePath, string destPath)
