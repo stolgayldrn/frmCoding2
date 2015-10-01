@@ -14,7 +14,7 @@ frame::frame(Path p)
 frame::~frame(void)
 {
 	t_feat_release_signature(&signature);
-
+	json_decref(my_source);
 }
 
 int frame::initialization(TVoctreeVLFeat VT, Path p)
@@ -29,11 +29,10 @@ int frame::initialization(TVoctreeVLFeat VT, Path p)
 	{
 		printf("\nInitialization error: ", e.msg.c_str());
 		return 0;
-	}
-	
+	}	
 }
 
-int frame::feature_extraction_AND_quantization(TVoctreeVLFeat VT, Path p)
+int frame::feature_extract_and_quantize(TVoctreeVLFeat VT, Path p)
 {
 	int flags = 1;
 	unsigned char * MySiftu;
@@ -74,7 +73,7 @@ int frame::feature_extraction_AND_quantization(TVoctreeVLFeat VT, Path p)
 	return 1;
 }
 
-int frame::JSON_NewVideo_ObjectExtraction(Video_info* my_VI, Algorithm_info* my_AI, Path* p)
+int frame::get_json4new_video(Video_info* my_VI, Algorithm_info* my_AI, Path* p)
 {
 	try
 	{

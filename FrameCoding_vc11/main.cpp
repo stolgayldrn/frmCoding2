@@ -88,8 +88,6 @@ int main(int argc, char* argv[])
 	myVideo_info->url			= "http://www.anadoluimages.com";
 	myVideo_info->fileName		= "";
 	
-
-	
 	myMYSQL->hostName			= "tcp://127.0.0.1:3306";
 	myMYSQL->userName			= "bitnami";
 	myMYSQL->password			= "181420b969";
@@ -101,8 +99,7 @@ int main(int argc, char* argv[])
 	myAlg->id					= 1;
 	myAlg->name					= "Run1";
 	myAlg->tree_name			= "VT_Middle_Tree_100MSig2s_SIFT_HELL_ZSTD_SIFT";
-
-	cout<<"max word size: " << 6;
+		
 
 	return 0;
 }

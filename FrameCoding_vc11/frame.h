@@ -77,8 +77,8 @@ public:
 	frame(Path p);
 	~frame(void);
 	int initialization(TVoctreeVLFeat VT, Path p);
-	int feature_extraction_AND_quantization(TVoctreeVLFeat VT, Path p);
-	int JSON_NewVideo_ObjectExtraction(Video_info* my_VI, Algorithm_info* my_AI, Path* p);
+	int feature_extract_and_quantize(TVoctreeVLFeat VT, Path p);
+	int get_json4new_video(Video_info* my_VI, Algorithm_info* my_AI, Path* p);
 	int ES_commit(ES_params* my_ES);
 	int MYSQL_commit(MYSQL_params* my_Mysql, Video_info* my_VI, Algorithm_info* my_AI, Path* p );
 private:
