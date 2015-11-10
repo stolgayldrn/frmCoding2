@@ -19,10 +19,7 @@
 #include "dirent.h"
 //#include <opencv2\core.hpp>
 //#include "t_common_defs.h"
-#define __TY_VIDEO_SEARCH___FPS_PROCESS 4
-#define __TY_VIDEO_SEARCH___FRAME_WIDTH 960
-#define __TY_VIDEO_SEARCH___FRAME_HEIGHT 720
-
+//
 
 using namespace std;
 
@@ -40,6 +37,7 @@ int get_folder_list(const char* Folder, std::vector<string> &fileList);
 int read_sig(const char* FileName, unsigned int *numdesc, unsigned char** siftDescByte, float** xCoords, float** yCoords, float** orientations, float** scales);
 //int cv_get_descs(const char* FileName, cv::Mat &descriptorMat, std::vector<cv::Point2f> &Coords, std::vector<float> &Orientations, std::vector<float> &Scales);
 string int2string(int num);
+std::string longlongint2string(long long int num);
 cv::Mat makeCanvas(std::vector<cv::Mat>& vecMat, int windowHeight, int nRows);
 int dirExists(const char *path);
 int pathControl(string Path);

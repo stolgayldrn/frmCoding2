@@ -477,7 +477,7 @@ int get_directory_signatures(const char* Folder, std::vector<string> &fileList)
 			struct dirent *temp=(struct dirent*)malloc(sizeof(struct dirent));
 
 			//memcpy(temp->d_name,ent->d_name,sizeof(TChar)*ent->d_namlen);
-			strcpy(temp->d_name,ent->d_name);
+			strcpy_s(temp->d_name,ent->d_name);
 			temp->d_namlen=ent->d_namlen;
 			temp->d_type=ent->d_type;
 
@@ -523,7 +523,7 @@ int get_directory_images(const char* Folder, std::vector<string> &fileList)
 			struct dirent *temp=(struct dirent*)malloc(sizeof(struct dirent));
 
 			//memcpy(temp->d_name,ent->d_name,sizeof(TChar)*ent->d_namlen);
-			strcpy(temp->d_name,ent->d_name);
+			strcpy_s(temp->d_name,ent->d_name);
 			temp->d_namlen=ent->d_namlen;
 			temp->d_type=ent->d_type;
 
@@ -569,7 +569,7 @@ int get_folder_list(const char* Folder, std::vector<string> &fileList)
 			struct dirent *temp=(struct dirent*)malloc(sizeof(struct dirent));
 
 			//memcpy(temp->d_name,ent->d_name,sizeof(TChar)*ent->d_namlen);
-			strcpy(temp->d_name,ent->d_name);
+			strcpy_s(temp->d_name,ent->d_name);
 			temp->d_namlen=ent->d_namlen;
 			temp->d_type=ent->d_type;
 			
@@ -602,7 +602,8 @@ int get_folder_list(const char* Folder, std::vector<string> &fileList)
 
 int read_sig(const char* FileName, unsigned int *numdesc, unsigned char** siftDescByte, float** xCoords, float** yCoords, float** orientations, float** scales)
 {
-	FILE *f=fopen(FileName, "rb");
+	FILE *f;
+	fopen_s(&f,FileName, "rb");
 
 	if (f)
 	{
@@ -643,6 +644,14 @@ int read_sig(const char* FileName, unsigned int *numdesc, unsigned char** siftDe
 }
 
 std::string int2string(int num)
+{
+	stringstream ss;
+	ss << num;
+	string str = ss.str();
+	return str;
+}
+
+std::string longlongint2string(long long int num)
 {
 	stringstream ss;
 	ss << num;
